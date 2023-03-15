@@ -8,7 +8,8 @@ import concurrent.futures
 
 async def get_info(days: datetime):
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"https://api.privatbank.ua/p24api/exchange_rates?date={days}") as response:
+        s = f"{days.day}.0{days.month}.{days.year}"
+        async with session.get(f"https://api.privatbank.ua/p24api/exchange_rates?json&date={s}") as response:
 
             print("Status:", response.status)
             print("Content-type:", response.headers['content-type'])
