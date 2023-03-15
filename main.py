@@ -21,7 +21,10 @@ async def get_info(days: datetime):
 
 async def main():
     try:
-        days = input()
+        while True:
+            days = input(">>>")
+            if int(days) <= 10:
+                break
         data = [datetime.now().date() - timedelta(days = i) for i in range(int(days))]
         task = [asyncio.create_task(get_info(d)) for d in data]
         await asyncio.wait(task)
@@ -29,5 +32,7 @@ async def main():
         print(f"This is not number! {err}")
 
 if __name__ == "__main__":
+    if platform.system() == 'Windows':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     r = asyncio.run(main())
     print(r)
