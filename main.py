@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 import concurrent.futures
 
+
 async def get_info(days: datetime):
     async with aiohttp.ClientSession() as session:
         s = f"{days.day}.0{days.month}.{days.year}"
@@ -19,13 +20,15 @@ async def get_info(days: datetime):
             print(result)
             return result
 
+
 async def main():
     try:
         while True:
             days = input(">>>")
             if int(days) <= 10:
                 break
-        data = [datetime.now().date() - timedelta(days = i) for i in range(int(days))]
+        data = [datetime.now().date() - timedelta(days=i)
+                for i in range(int(days))]
         task = [asyncio.create_task(get_info(d)) for d in data]
         await asyncio.wait(task)
     except ValueError as err:
