@@ -84,13 +84,13 @@ class Server:
             await self.send_to_clients(f"{ws.name}: {message}")
 
     async def command_exchange(self, )
+       if not f"\n" in message:
+            await get_info_now()
+        else:
+            await get_info_old(days)
 
 
 async def exchange(message):
-    if not f"\n" in message:
-        await get_info_now()
-    else:
-        await get_info_old(days)
 
 
 async def main():
