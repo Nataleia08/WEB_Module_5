@@ -7,6 +7,8 @@ import platform
 from datetime import datetime, timedelta
 from websockets import WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosedOK
+import re
+import aiofiles
 
 logging.basicConfig(level=logging.INFO)
 
@@ -31,11 +33,14 @@ def print_info(text, res_list: list):
             res_list.append("EUR")
             res_list.append("sale:  ")
             res_list.append(text[k][8]['saleRateNB'])
-            res_list.append("purchase:  ", text[k][8]['purchaseRateNB'])
+            res_list.append("purchase:  ")
+            res_list.append(text[k][8]['purchaseRateNB'])
             res_list.append("USD")
-            res_list.append("sale:  ", text[k][23]['saleRateNB'])
-            res_list.append("purchase:  ", text[k][23]['purchaseRateNB'])
-            res_list.append("-----------------------------------------------")
+            res_list.append("sale:  ")
+            res_list.append(text[k][23]['saleRateNB'])
+            res_list.append("purchase:  ")
+            res_list.append(text[k][23]['purchaseRateNB'])
+            # res_list.append("-----------------------------------------------")
     return res_list
 
 
@@ -44,8 +49,12 @@ async def command_exchange_arhive(days: int):
     try:
         data = [datetime.now().date() - timedelta(days=i)
                 for i in range(int(days))]
+        # result = []
+        # async for d in data:
+        #     result.append(get_info(d))
         task = [asyncio.create_task(get_info(d)) for d in data]
-        await asyncio.wait(task)
+        result = await asyncio.gather(*task, return_exceptions=True)
+        return result
     except ValueError as err:
         print(f"This is not number! {err}")
 
@@ -77,14 +86,20 @@ class Server:
 
     async def distrubute(self, ws: WebSocketServerProtocol):
         async for message in ws:
-            if exchange in message:
-                await exchange(message)
             if message.find("exchange") != -1:
-                if message.find( r"") != -1:
-                    await command_exchange_arhive()
-                r = await get_info(datetime.now().date())
+                if re.findall(r"\d+", message):
+                    # days = int(re.findall(r"\d+", message)[0])
+                    r = await command_exchange_arhive(int(re.findall(r"\d+", message)[0]))
+                    await self.send_to_clients(f"{ws.name}: {message}, {r}")
+                else:
+                    r = await get_info(datetime.now().date())
+                    await self.send_to_clients(f"{ws.name}: {message}, {r}")
+                
+                async with aiofiles.open('log.json', mode='a') as asf:
+                    await asf.write(f"{ws.name} {datetime.now()}: {message}, {r} \n")
 
-            await self.send_to_clients(f"{ws.name}: {message}, {r}")
+            else:
+                await self.send_to_clients(f"{ws.name}: {message}")
 
 
 
